@@ -13,6 +13,9 @@ public protocol CountryPickerDelegate: AnyObject {
 }
 
 public final class CountryPickerViewController: UIViewController {
+
+    private var allowedISOCodes: [String]?
+
     lazy var headerView: UIView = {
         let view = UIView()
         view.backgroundColor = ColorCompatibility.systemBackground
@@ -155,6 +158,13 @@ public final class CountryPickerViewController: UIViewController {
         }
     }
 
+    /// Show only these ISO codes (e.g. ["US","JP","DE"]), and pick a default
+    public convenience init(allowedISOCodes: [String], selected: String = "TR") {
+        self.init(nibName: nil, bundle: nil)
+        self.allowedISOCodes = allowedISOCodes
+        self.selectedCountry = selected
+    }
+
     override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         setup()
@@ -167,8 +177,21 @@ public final class CountryPickerViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        countries = CountryManager.shared.getCountries().sorted {
-            $0.localizedName.localizedCaseInsensitiveCompare($1.localizedName) == CountryManager.shared.config.countriesSortingComparisonResult
+        // 1) grab full list
+        let all = CountryManager.shared.getCountries()
+
+        // 2) if we have an ISO filter, apply it
+        let sourceList: [Country]
+        if let allowed = allowedISOCodes {
+            sourceList = all.filter { allowed.contains($0.isoCode) }
+        } else {
+            sourceList = all
+        }
+
+        // 3) sort & assign
+        countries = sourceList.sorted {
+            $0.localizedName.localizedCaseInsensitiveCompare($1.localizedName)
+                == CountryManager.shared.config.countriesSortingComparisonResult
         }
         filteredCountries = countries
         tableView.reloadData()
