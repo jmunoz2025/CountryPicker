@@ -158,13 +158,6 @@ public class CountryPickerViewController: UIViewController {
         }
     }
 
-    /// Show only these ISO codes (e.g. ["US","JP","DE"]), and pick a default
-    public convenience init(allowedISOCodes: [String], selected: String = "TR") {
-        self.init(nibName: nil, bundle: nil)
-        self.allowedISOCodes = allowedISOCodes
-        self.selectedCountry = selected
-    }
-
     override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         setup()
@@ -177,29 +170,29 @@ public class CountryPickerViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
+        setup()            // your view hierarchy
+        loadCountries()    // initial population
+    }
 
-        // 1) Grab the full list
+    /// Show only these ISO codes (e.g. ["US","JP","DE"]), and pick a default
+    public convenience init(allowedISOCodes: [String], selected: String = "TR") {
+        self.init(nibName: nil, bundle: nil)
+        self.allowedISOCodes = allowedISOCodes
+        self.selectedCountry = selected
+    }
+
+    private func loadCountries() {
         let all = CountryManager.shared.getCountries()
+        let allowedSet = Set(allowedISOCodes?.map { $0.uppercased() } ?? all.map { $0.isoCode.uppercased() })
 
-        // 2) Normalize allowed codes to uppercase
-        if let allowed = allowedISOCodes?.map({ $0.uppercased() }) {
-            // 3) Filter using uppercase match
-            countries = all.filter { country in
-                allowed.contains(country.isoCode.uppercased())
-            }
-        } else {
-            countries = all
+        let filtered = all.filter { allowedSet.contains($0.isoCode.uppercased()) }
+        let sorted   = filtered.sorted {
+            $0.localizedName.localizedCaseInsensitiveCompare($1.localizedName)
+             == CountryManager.shared.config.countriesSortingComparisonResult
         }
 
-        // 4) Sort by localizedName
-        countries.sort { lhs, rhs in
-            lhs.localizedName
-               .localizedCaseInsensitiveCompare(rhs.localizedName)
-               == CountryManager.shared.config.countriesSortingComparisonResult
-        }
-
-        // 5) Show and reload
-        filteredCountries = countries
+        countries         = sorted
+        filteredCountries = sorted
         tableView.reloadData()
     }
 
