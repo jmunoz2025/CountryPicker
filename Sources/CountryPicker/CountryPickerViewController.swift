@@ -177,13 +177,15 @@ public final class CountryPickerViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
+
         // 1) grab full list
         let all = CountryManager.shared.getCountries()
 
-        // 2) if we have an ISO filter, apply it
+        // 2) if we have an ISO filter, normalize to uppercase & apply it
         let sourceList: [Country]
         if let allowed = allowedISOCodes {
-            sourceList = all.filter { allowed.contains($0.isoCode) }
+            let allowedSet = Set(allowed.map { $0.uppercased() })
+            sourceList = all.filter { allowedSet.contains($0.isoCode.uppercased()) }
         } else {
             sourceList = all
         }
@@ -196,6 +198,7 @@ public final class CountryPickerViewController: UIViewController {
         filteredCountries = countries
         tableView.reloadData()
     }
+
 
     func setup() {
         setupViews()
