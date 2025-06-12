@@ -14,7 +14,12 @@ public protocol CountryPickerDelegate: AnyObject {
 
 public class CountryPickerViewController: UIViewController {
 
-    private var allowedISOCodes: [String]?
+    private var allowedISOCodes: [String]? {
+        didSet {
+            // Reload when allowedISOCodes changes
+            loadCountries()
+        }
+    }
 
     /// Show only these ISO codes (e.g. ["US","JP","DE"]), and pick a default
     public convenience init(allowedISOCodes: [String]) {
@@ -182,7 +187,6 @@ public class CountryPickerViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setup()            // your view hierarchy
-        loadCountries()    // initial population
     }
 
     private func loadCountries() {
