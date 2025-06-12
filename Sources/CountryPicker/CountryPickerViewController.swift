@@ -12,7 +12,7 @@ public protocol CountryPickerDelegate: AnyObject {
     func countryPicker(didSelect country: Country)
 }
 
-public final class CountryPickerViewController: UIViewController {
+public class CountryPickerViewController: UIViewController {
 
     private var allowedISOCodes: [String]?
 
@@ -178,26 +178,20 @@ public final class CountryPickerViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
 
-        // 1) grab full list
         let all = CountryManager.shared.getCountries()
-
-        // 2) if we have an ISO filter, normalize to uppercase & apply it
-        let sourceList: [Country]
+        print("all codes: \(all.map { $0.isoCode }.joined(separator: ","))")
         if let allowed = allowedISOCodes {
-            let allowedSet = Set(allowed.map { $0.uppercased() })
-            sourceList = all.filter { allowedSet.contains($0.isoCode.uppercased()) }
+            print("allowed filter: \(allowed.joined(separator: ","))")
+            countries = all
+                .filter { allowed.contains($0.isoCode) }
+                .sorted { … }
         } else {
-            sourceList = all
-        }
-
-        // 3) sort & assign
-        countries = sourceList.sorted {
-            $0.localizedName.localizedCaseInsensitiveCompare($1.localizedName)
-                == CountryManager.shared.config.countriesSortingComparisonResult
+            countries = all.sorted { … }
         }
         filteredCountries = countries
         tableView.reloadData()
     }
+
 
 
     func setup() {
