@@ -178,21 +178,30 @@ public class CountryPickerViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
 
+        // 1) Grab the full list
         let all = CountryManager.shared.getCountries()
-        print("all codes: \(all.map { $0.isoCode }.joined(separator: ","))")
-        if let allowed = allowedISOCodes {
-            print("allowed filter: \(allowed.joined(separator: ","))")
-            countries = all
-                .filter { allowed.contains($0.isoCode) }
-                .sorted { … }
+
+        // 2) Normalize allowed codes to uppercase
+        if let allowed = allowedISOCodes?.map({ $0.uppercased() }) {
+            // 3) Filter using uppercase match
+            countries = all.filter { country in
+                allowed.contains(country.isoCode.uppercased())
+            }
         } else {
-            countries = all.sorted { … }
+            countries = all
         }
+
+        // 4) Sort by localizedName
+        countries.sort { lhs, rhs in
+            lhs.localizedName
+               .localizedCaseInsensitiveCompare(rhs.localizedName)
+               == CountryManager.shared.config.countriesSortingComparisonResult
+        }
+
+        // 5) Show and reload
         filteredCountries = countries
         tableView.reloadData()
     }
-
-
 
     func setup() {
         setupViews()
