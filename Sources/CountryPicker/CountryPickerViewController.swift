@@ -16,6 +16,12 @@ public class CountryPickerViewController: UIViewController {
 
     private var allowedISOCodes: [String]?
 
+    /// Show only these ISO codes (e.g. ["US","JP","DE"]), and pick a default
+    public convenience init(allowedISOCodes: [String]) {
+        self.init(nibName: nil, bundle: nil)
+        self.allowedISOCodes = allowedISOCodes
+    }
+
     lazy var headerView: UIView = {
         let view = UIView()
         view.backgroundColor = ColorCompatibility.systemBackground
@@ -57,6 +63,11 @@ public class CountryPickerViewController: UIViewController {
         button.addTarget(self, action: #selector(close), for: .touchUpInside)
         return button
     }()
+
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadCountries()
+    }
 
     lazy var searchTextField: UITextField = {
         let textField = UITextField()
@@ -172,13 +183,6 @@ public class CountryPickerViewController: UIViewController {
         super.viewDidLoad()
         setup()            // your view hierarchy
         loadCountries()    // initial population
-    }
-
-    /// Show only these ISO codes (e.g. ["US","JP","DE"]), and pick a default
-    public convenience init(allowedISOCodes: [String], selected: String = "TR") {
-        self.init(nibName: nil, bundle: nil)
-        self.allowedISOCodes = allowedISOCodes
-        self.selectedCountry = selected
     }
 
     private func loadCountries() {
